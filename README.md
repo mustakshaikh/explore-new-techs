@@ -21,7 +21,8 @@ A web-based tool that converts any selfie into a professional 4x6" sheet with 6 
 
 1. Open `index.html` in your web browser
 2. Upload **any** selfie (JPEG or PNG, max 10MB) - background will be automatically removed!
-3. Wait a few seconds while AI removes the background and adds pure white
+3. Wait 10-30 seconds while AI removes the background (first use takes longer as AI models download)
+   - **Optional**: Click "Skip AI Processing" to use your original image without AI background removal
 4. Adjust the photo using the sliders:
    - **Zoom**: Scale your photo to fit perfectly
    - **Position X/Y**: Move your photo horizontally and vertically
@@ -69,3 +70,22 @@ Works on all modern browsers that support HTML5 Canvas and WebAssembly:
 - Opera
 
 **Note**: First-time use will download AI models (~5-10MB). Subsequent uses will be faster thanks to browser caching.
+
+### Troubleshooting
+
+**Q: AI processing is taking too long (over 30 seconds)**
+- Click "Skip AI Processing" button to use your original image
+- Make sure your photo already has a white/light background
+- Try using a smaller image file
+- Refresh the page and try again
+
+**Q: AI processing failed**
+- The app will automatically load your original image
+- Ensure your photo has a white background for best results
+- Check your internet connection (AI models need to download on first use)
+- Try a different browser (Chrome/Edge recommended)
+
+**Q: Background removal quality is not good**
+- Use a photo with clear subject separation from background
+- Ensure good lighting and focus
+- If needed, click "Skip" and use a photo with white background instead

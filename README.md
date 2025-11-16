@@ -9,19 +9,23 @@ A web-based tool that converts your selfie into a professional 4x6" sheet with 6
 
 - **Easy Upload**: Drag and drop or click to upload your selfie
 - **Interactive Editor**: Adjust zoom, position, and rotation to perfectly frame your photo
+- **Professional Enhancement**: Brightness and contrast controls for optimal photo quality
 - **US Passport Compliant**: Generates 2x2 inch passport photos following US requirements
 - **High Quality**: 300 DPI resolution for professional printing
 - **4x6 Sheet Layout**: 6 photos (2 columns x 3 rows) on a standard 4x6" photo paper
 - **Instant Download**: Download as high-quality JPEG (95% quality)
+- **White Background**: Ensures clean, professional passport photos (requires white background in source image)
 
 ### How to Use
 
 1. Open `index.html` in your web browser
-2. Upload your selfie (JPEG or PNG, max 10MB)
+2. Upload your selfie (JPEG or PNG, max 10MB) with a white background
 3. Adjust the photo using the sliders:
    - **Zoom**: Scale your photo to fit perfectly
    - **Position X/Y**: Move your photo horizontally and vertically
    - **Rotation**: Straighten your photo if needed
+   - **Brightness**: Enhance lighting for a professional look (default: 1.1)
+   - **Contrast**: Improve photo clarity and definition (default: 1.1)
 4. Click "Generate 4x6 Sheet" to create the passport photo sheet
 5. Click "Download High-Quality JPEG" to save the file
 6. Print on 4x6" photo paper for perfect passport photos!

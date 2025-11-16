@@ -4,7 +4,9 @@ let imageSettings = {
     scale: 1,
     positionX: 0,
     positionY: 0,
-    rotation: 0
+    rotation: 0,
+    brightness: 1.1,
+    contrast: 1.1
 };
 
 // Constants for US Passport Photo
@@ -30,6 +32,8 @@ const scaleSlider = document.getElementById('scaleSlider');
 const positionXSlider = document.getElementById('positionX');
 const positionYSlider = document.getElementById('positionY');
 const rotationSlider = document.getElementById('rotation');
+const brightnessSlider = document.getElementById('brightness');
+const contrastSlider = document.getElementById('contrast');
 const resetBtn = document.getElementById('resetBtn');
 const generateBtn = document.getElementById('generateBtn');
 const downloadBtn = document.getElementById('downloadBtn');
@@ -76,6 +80,16 @@ positionYSlider.addEventListener('input', (e) => {
 
 rotationSlider.addEventListener('input', (e) => {
     imageSettings.rotation = parseFloat(e.target.value);
+    updatePreview();
+});
+
+brightnessSlider.addEventListener('input', (e) => {
+    imageSettings.brightness = parseFloat(e.target.value);
+    updatePreview();
+});
+
+contrastSlider.addEventListener('input', (e) => {
+    imageSettings.contrast = parseFloat(e.target.value);
     updatePreview();
 });
 
@@ -130,13 +144,17 @@ function resetSettings() {
         scale: 1,
         positionX: 0,
         positionY: 0,
-        rotation: 0
+        rotation: 0,
+        brightness: 1.1,
+        contrast: 1.1
     };
 
     scaleSlider.value = 1;
     positionXSlider.value = 0;
     positionYSlider.value = 0;
     rotationSlider.value = 0;
+    brightnessSlider.value = 1.1;
+    contrastSlider.value = 1.1;
 
     if (uploadedImage) {
         updatePreview();
@@ -163,6 +181,9 @@ function updatePreview() {
     // Move to center for rotation
     ctx.translate(displaySize / 2, displaySize / 2);
     ctx.rotate((imageSettings.rotation * Math.PI) / 180);
+
+    // Apply brightness and contrast filters
+    ctx.filter = `brightness(${imageSettings.brightness}) contrast(${imageSettings.contrast})`;
 
     // Calculate scaled dimensions
     const scale = imageSettings.scale;
@@ -220,6 +241,9 @@ function generatePassportSheet() {
     // Move to center for rotation
     tempCtx.translate(PASSPORT_SIZE_PX / 2, PASSPORT_SIZE_PX / 2);
     tempCtx.rotate((imageSettings.rotation * Math.PI) / 180);
+
+    // Apply brightness and contrast filters for professional look
+    tempCtx.filter = `brightness(${imageSettings.brightness}) contrast(${imageSettings.contrast})`;
 
     // Calculate scaled dimensions for high-res output
     const scale = imageSettings.scale;
@@ -281,7 +305,9 @@ function resetApp() {
         scale: 1,
         positionX: 0,
         positionY: 0,
-        rotation: 0
+        rotation: 0,
+        brightness: 1.1,
+        contrast: 1.1
     };
 
     fileInput.value = '';

@@ -131,14 +131,41 @@ header h1 {
     color: #d39e00;
 }
 
-.bg-reminder {
-    background: #e7f3ff;
-    border-left: 4px solid #667eea;
-    padding: 12px 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    color: #2c5aa0;
-    font-size: 0.9rem;
+.loading-section {
+    background: white;
+    border-radius: 15px;
+    padding: 60px 40px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.loading-container h3 {
+    color: #667eea;
+    margin: 25px 0 15px 0;
+    font-size: 1.5rem;
+}
+
+.loading-container p {
+    color: #666;
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .editor-section,

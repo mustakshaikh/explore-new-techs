@@ -24,6 +24,7 @@ const JPEG_QUALITY = 0.95; // High quality
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
+const loadingSection = document.getElementById('loadingSection');
 const editorSection = document.getElementById('editorSection');
 const resultSection = document.getElementById('resultSection');
 const previewCanvas = document.getElementById('previewCanvas');
@@ -104,7 +105,7 @@ function handleFileSelect(e) {
     handleFile(file);
 }
 
-function handleFile(file) {
+async function handleFile(file) {
     if (!file) return;
 
     // Validate file type
@@ -119,8 +120,14 @@ function handleFile(file) {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    // Show loading screen
+    showLoading();
+
+    try {
+        // Remove background using AI
+        const imageWithoutBg = await removeBackgroundFromImage(file);
+
+        // Load the processed image
         const img = new Image();
         img.onload = () => {
             uploadedImage = img;
@@ -128,13 +135,61 @@ function handleFile(file) {
             showEditor();
             updatePreview();
         };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        img.src = imageWithoutBg;
+    } catch (error) {
+        console.error('Error processing image:', error);
+        alert('Failed to process image. Please try again with a different photo.');
+        resetApp();
+    }
+}
+
+async function removeBackgroundFromImage(file) {
+    try {
+        // Wait for the library to load
+        while (!window.removeBackground) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Remove background using the AI library
+        const blob = await window.removeBackground(file, {
+            output: {
+                format: 'image/png',
+                quality: 0.95
+            }
+        });
+
+        // Create canvas to add white background
+        const img = await createImageBitmap(blob);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+
+        // Fill with white background
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the image with transparent background removed
+        ctx.drawImage(img, 0, 0);
+
+        // Return as data URL
+        return canvas.toDataURL('image/png', 0.95);
+    } catch (error) {
+        console.error('Background removal error:', error);
+        throw error;
+    }
+}
+
+function showLoading() {
+    document.querySelector('.upload-section').style.display = 'none';
+    loadingSection.style.display = 'block';
+    editorSection.style.display = 'none';
+    resultSection.style.display = 'none';
 }
 
 function showEditor() {
     document.querySelector('.upload-section').style.display = 'none';
+    loadingSection.style.display = 'none';
     editorSection.style.display = 'block';
     resultSection.style.display = 'none';
 }
@@ -312,6 +367,7 @@ function resetApp() {
 
     fileInput.value = '';
     document.querySelector('.upload-section').style.display = 'grid';
+    loadingSection.style.display = 'none';
     editorSection.style.display = 'none';
     resultSection.style.display = 'none';
 }

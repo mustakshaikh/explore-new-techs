@@ -153,6 +153,23 @@ header h1 {
     line-height: 1.6;
 }
 
+.loading-details {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9ff;
+    border-radius: 8px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.loading-details p {
+    color: #667eea;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+}
+
 .spinner {
     width: 60px;
     height: 60px;

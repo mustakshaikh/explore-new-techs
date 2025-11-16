@@ -39,6 +39,12 @@ const resetBtn = document.getElementById('resetBtn');
 const generateBtn = document.getElementById('generateBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const newPhotoBtn = document.getElementById('newPhotoBtn');
+const skipAiBtn = document.getElementById('skipAiBtn');
+const progressText = document.getElementById('progressText');
+
+// Global flag for canceling AI processing
+let cancelAiProcessing = false;
+let currentFile = null;
 
 // Event Listeners
 uploadArea.addEventListener('click', () => fileInput.click());
@@ -98,6 +104,7 @@ resetBtn.addEventListener('click', resetSettings);
 generateBtn.addEventListener('click', generatePassportSheet);
 downloadBtn.addEventListener('click', downloadImage);
 newPhotoBtn.addEventListener('click', resetApp);
+skipAiBtn.addEventListener('click', skipAiProcessing);
 
 // File handling
 function handleFileSelect(e) {
@@ -120,12 +127,24 @@ async function handleFile(file) {
         return;
     }
 
+    // Store file for skip functionality
+    currentFile = file;
+    cancelAiProcessing = false;
+
     // Show loading screen
     showLoading();
 
     try {
         // Remove background using AI
+        updateProgress('Loading AI models... (this may take 10-30 seconds on first use)');
         const imageWithoutBg = await removeBackgroundFromImage(file);
+
+        // Check if user canceled
+        if (cancelAiProcessing) {
+            return;
+        }
+
+        updateProgress('Processing complete! Loading editor...');
 
         // Load the processed image
         const img = new Image();
@@ -138,17 +157,65 @@ async function handleFile(file) {
         img.src = imageWithoutBg;
     } catch (error) {
         console.error('Error processing image:', error);
-        alert('Failed to process image. Please try again with a different photo.');
-        resetApp();
+
+        if (!cancelAiProcessing) {
+            alert('AI processing failed. Loading original image instead. You may need to ensure the background is white.');
+            loadOriginalImage(file);
+        }
+    }
+}
+
+function skipAiProcessing() {
+    cancelAiProcessing = true;
+    updateProgress('Skipping AI processing... Loading original image...');
+
+    if (currentFile) {
+        loadOriginalImage(currentFile);
+    }
+}
+
+function loadOriginalImage(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            uploadedImage = img;
+            resetSettings();
+            showEditor();
+            updatePreview();
+
+            // Show a notice about white background
+            setTimeout(() => {
+                alert('⚠️ Using original image. Please ensure your photo has a white background for best passport photo results.');
+            }, 100);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function updateProgress(message) {
+    if (progressText) {
+        progressText.textContent = message;
     }
 }
 
 async function removeBackgroundFromImage(file) {
     try {
+        updateProgress('Waiting for AI library to load...');
+
         // Wait for the library to load
+        let waitCount = 0;
         while (!window.removeBackground) {
             await new Promise(resolve => setTimeout(resolve, 100));
+            waitCount++;
+
+            if (waitCount > 100) { // 10 seconds timeout for library loading
+                throw new Error('AI library failed to load. Please refresh the page.');
+            }
         }
+
+        updateProgress('AI models loaded! Analyzing your photo...');
 
         // Remove background using the AI library
         const blob = await window.removeBackground(file, {
@@ -157,6 +224,8 @@ async function removeBackgroundFromImage(file) {
                 quality: 0.95
             }
         });
+
+        updateProgress('Background removed! Adding white background...');
 
         // Create canvas to add white background
         const img = await createImageBitmap(blob);
@@ -171,6 +240,8 @@ async function removeBackgroundFromImage(file) {
 
         // Draw the image with transparent background removed
         ctx.drawImage(img, 0, 0);
+
+        updateProgress('Done! Preparing your photo...');
 
         // Return as data URL
         return canvas.toDataURL('image/png', 0.95);

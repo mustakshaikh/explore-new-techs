@@ -45,8 +45,14 @@
         <div class="loading-section" id="loadingSection" style="display: none;">
             <div class="loading-container">
                 <div class="spinner"></div>
-                <h3>Processing Your Photo...</h3>
-                <p>AI is removing the background and preparing your passport photo. This may take a few seconds.</p>
+                <h3 id="loadingTitle">Processing Your Photo...</h3>
+                <p id="loadingMessage">AI is removing the background and preparing your passport photo. This may take 10-30 seconds on first use.</p>
+                <div class="loading-details">
+                    <p id="progressText">Initializing AI models...</p>
+                </div>
+                <div class="button-group" style="margin-top: 25px;">
+                    <button id="skipAiBtn" class="btn btn-secondary">Skip AI Processing (Use Original)</button>
+                </div>
             </div>
         </div>
 

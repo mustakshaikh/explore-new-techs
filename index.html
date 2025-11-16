@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selfie to US Passport Photo Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ US Passport Photo Converter</h1>
+            <p class="subtitle">Upload your selfie and get a 4x6" sheet with 6 passport-sized photos</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p class="upload-text">Click to upload or drag and drop</p>
+                <p class="upload-hint">JPEG, PNG (Max 10MB)</p>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/jpg" hidden>
+            </div>
+
+            <div class="instructions">
+                <h3>US Passport Photo Requirements:</h3>
+                <ul>
+                    <li>Face directly towards camera</li>
+                    <li>Neutral expression, eyes open</li>
+                    <li>Plain white or off-white background</li>
+                    <li>No glasses, hats, or headphones</li>
+                    <li>Good lighting with no shadows</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="editor-section" id="editorSection" style="display: none;">
+            <div class="preview-container">
+                <h3>Adjust Your Photo</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="previewCanvas"></canvas>
+                    <div class="passport-guide">
+                        <div class="guide-box"></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="scaleSlider">Zoom:</label>
+                        <input type="range" id="scaleSlider" min="0.5" max="2" step="0.01" value="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="positionX">Position X:</label>
+                        <input type="range" id="positionX" min="-200" max="200" step="1" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="positionY">Position Y:</label>
+                        <input type="range" id="positionY" min="-200" max="200" step="1" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="rotation">Rotation:</label>
+                        <input type="range" id="rotation" min="-45" max="45" step="0.1" value="0">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="resetBtn" class="btn btn-secondary">Reset</button>
+                    <button id="generateBtn" class="btn btn-primary">Generate 4x6 Sheet</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <h3>Your Passport Photo Sheet (4x6")</h3>
+            <div class="result-canvas-wrapper">
+                <canvas id="resultCanvas"></canvas>
+            </div>
+            <div class="button-group">
+                <button id="downloadBtn" class="btn btn-success">Download High-Quality JPEG</button>
+                <button id="newPhotoBtn" class="btn btn-secondary">Upload New Photo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

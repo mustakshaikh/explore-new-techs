@@ -1,15 +1,14 @@
-// ─── ES Module: import background removal directly ───────────────────────────
-import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm';
+// ─── Constants ───────────────────────────────────────────────────────────────
+const DPI          = 300;
+const PASSPORT_PX  = 2 * DPI;   // 600 × 600  (2 × 2 in)
+const SHEET_W_PX   = 4 * DPI;   // 1200 px    (4 in)
+const SHEET_H_PX   = 6 * DPI;   // 1800 px    (6 in)
+const COLS         = 2;
+const ROWS         = 3;
+const JPEG_QUALITY = 0.95;
+const PREVIEW_SIZE = 400;
 
-// ─── US Passport Photo constants (300 DPI) ───────────────────────────────────
-const DPI             = 300;
-const PASSPORT_PX     = 2 * DPI;   // 600 × 600  (2 × 2 inches)
-const SHEET_W_PX      = 4 * DPI;   // 1200 px    (4 inches)
-const SHEET_H_PX      = 6 * DPI;   // 1800 px    (6 inches)
-const COLS            = 2;
-const ROWS            = 3;
-const JPEG_QUALITY    = 0.95;
-const PREVIEW_SIZE    = 400;        // px for the on-screen editor square
+const BG_LIB_URL = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let uploadedImage = null;
@@ -26,11 +25,30 @@ const resultCanvas   = document.getElementById('resultCanvas');
 const progressBar    = document.getElementById('progressBar');
 const progressText   = document.getElementById('progressText');
 
-// ─── Upload ──────────────────────────────────────────────────────────────────
+// ─── Warn if opened via file:// ──────────────────────────────────────────────
+if (location.protocol === 'file:') {
+    const banner = document.createElement('div');
+    banner.style.cssText = [
+        'position:fixed;top:0;left:0;right:0;z-index:9999',
+        'background:#dc2626;color:white;padding:14px 20px',
+        'font:600 14px/1.5 sans-serif;text-align:center'
+    ].join(';');
+    banner.innerHTML =
+        '⚠️ This app requires a local web server to work. ' +
+        'Run: <code style="background:rgba(0,0,0,.25);padding:2px 6px;border-radius:4px">' +
+        'python3 -m http.server 8000</code> then open ' +
+        '<a href="http://localhost:8000" style="color:#fde68a">http://localhost:8000</a>';
+    document.body.prepend(banner);
+}
+
+// ─── Upload events ───────────────────────────────────────────────────────────
 uploadArea.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
 uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
 uploadArea.addEventListener('drop', e => {
     e.preventDefault();
@@ -38,7 +56,7 @@ uploadArea.addEventListener('drop', e => {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
 
-// ─── Controls ────────────────────────────────────────────────────────────────
+// ─── Slider events ───────────────────────────────────────────────────────────
 document.getElementById('scaleSlider').addEventListener('input', e => {
     settings.scale = parseFloat(e.target.value);
     document.getElementById('scaleVal').textContent = settings.scale.toFixed(2) + '×';
@@ -75,33 +93,28 @@ async function handleFile(file) {
     setProgress(5, 'Loading image…');
 
     try {
-        // Step 1 – decode image
-        const originalDataUrl = await readFileAsDataURL(file);
-        setProgress(15, 'Removing background with AI…');
+        setProgress(10, 'Removing background with AI…');
 
-        // Step 2 – AI background removal (small model = ~5 MB, fast)
+        // Dynamically import the library only when needed
+        const { removeBackground } = await import(BG_LIB_URL);
+
         const noBgBlob = await removeBackground(file, {
             model: 'small',
             output: { format: 'image/png', quality: 1 },
-            // point to CDN so model files resolve even on local file://
             publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
             progress: (key, cur, total) => {
                 if (total > 0) {
-                    const pct = Math.round(15 + (cur / total) * 70);
+                    const pct = Math.round(10 + (cur / total) * 75);
                     const label = key.includes('fetch') ? 'Downloading AI model…' : 'Processing image…';
                     setProgress(pct, label);
                 }
             }
         });
 
-        setProgress(90, 'Compositing white background…');
-
-        // Step 3 – paint subject onto pure white canvas
+        setProgress(90, 'Adding white background…');
         const whiteDataUrl = await compositeOnWhite(noBgBlob);
-
         setProgress(100, 'Done!');
 
-        // Step 4 – show editor
         const img = new Image();
         img.onload = () => {
             uploadedImage = img;
@@ -113,21 +126,16 @@ async function handleFile(file) {
 
     } catch (err) {
         console.error('Background removal failed:', err);
-        alert('Background removal failed: ' + err.message + '\n\nTry again or use a photo with a plain background.');
+        if (location.protocol === 'file:') {
+            alert('Cannot run AI on file://\n\nStart a local server:\n  python3 -m http.server 8000\nThen open http://localhost:8000');
+        } else {
+            alert('Background removal failed. Check your internet connection and try again.\n\n' + err.message);
+        }
         showSection('upload');
     }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 async function compositeOnWhite(blob) {
     const bmp = await createImageBitmap(blob);
     const c = document.createElement('canvas');
@@ -153,7 +161,7 @@ function showSection(name) {
     resultSection.style.display  = name === 'result'  ? 'block' : 'none';
 }
 
-// ─── Preview ─────────────────────────────────────────────────────────────────
+// ─── Preview / drawing ───────────────────────────────────────────────────────
 function resetSettings() {
     settings = { scale: 1, x: 0, y: 0, rotation: 0 };
     document.getElementById('scaleSlider').value = 1;
@@ -169,27 +177,32 @@ function resetSettings() {
 
 function drawPreview() {
     if (!uploadedImage) return;
-    const ctx = previewCanvas.getContext('2d');
     previewCanvas.width  = PREVIEW_SIZE;
     previewCanvas.height = PREVIEW_SIZE;
-    drawPhotoOnCanvas(ctx, PREVIEW_SIZE, uploadedImage, settings);
+    drawPhotoOnCanvas(previewCanvas.getContext('2d'), PREVIEW_SIZE, uploadedImage, settings);
 }
 
 /**
- * Draws a single passport photo onto a square canvas of `size` pixels.
- * White background → image scaled/positioned/rotated to fill.
+ * Draws one passport photo onto a square canvas.
+ * White fill first, then image scaled with object-fit:cover logic.
  */
 function drawPhotoOnCanvas(ctx, size, img, s) {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, size, size);
-
     ctx.save();
-    ctx.translate(size / 2 + s.x * (size / PREVIEW_SIZE), size / 2 + s.y * (size / PREVIEW_SIZE));
+    ctx.translate(
+        size / 2 + s.x * (size / PREVIEW_SIZE),
+        size / 2 + s.y * (size / PREVIEW_SIZE)
+    );
     ctx.rotate((s.rotation * Math.PI) / 180);
-
-    // Cover the square (like CSS object-fit: cover)
     const cover = Math.max(size / img.width, size / img.height) * s.scale;
-    ctx.drawImage(img, -img.width * cover / 2, -img.height * cover / 2, img.width * cover, img.height * cover);
+    ctx.drawImage(
+        img,
+        -img.width  * cover / 2,
+        -img.height * cover / 2,
+        img.width  * cover,
+        img.height * cover
+    );
     ctx.restore();
 }
 
@@ -204,22 +217,20 @@ function generateSheet() {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, SHEET_W_PX, SHEET_H_PX);
 
-    // Render one 600×600 passport photo
-    const photoCanvas = document.createElement('canvas');
-    photoCanvas.width  = PASSPORT_PX;
-    photoCanvas.height = PASSPORT_PX;
-    // Scale position offsets from preview (400px) to print size (600px)
-    const printSettings = {
-        ...settings,
+    // Render one high-res passport photo
+    const photo = document.createElement('canvas');
+    photo.width = photo.height = PASSPORT_PX;
+    drawPhotoOnCanvas(photo.getContext('2d'), PASSPORT_PX, uploadedImage, {
+        scale: settings.scale,
         x: settings.x * (PASSPORT_PX / PREVIEW_SIZE),
-        y: settings.y * (PASSPORT_PX / PREVIEW_SIZE)
-    };
-    drawPhotoOnCanvas(photoCanvas.getContext('2d'), PASSPORT_PX, uploadedImage, printSettings);
+        y: settings.y * (PASSPORT_PX / PREVIEW_SIZE),
+        rotation: settings.rotation
+    });
 
     // Tile 2 columns × 3 rows
     for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
-            ctx.drawImage(photoCanvas, col * PASSPORT_PX, row * PASSPORT_PX);
+            ctx.drawImage(photo, col * PASSPORT_PX, row * PASSPORT_PX);
         }
     }
 
@@ -230,7 +241,7 @@ function generateSheet() {
 function downloadSheet() {
     resultCanvas.toBlob(blob => {
         const a = document.createElement('a');
-        a.download = `passport-photos-4x6-${Date.now()}.jpg`;
+        a.download = 'passport-photos-4x6-' + Date.now() + '.jpg';
         a.href = URL.createObjectURL(blob);
         a.click();
         URL.revokeObjectURL(a.href);

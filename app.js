@@ -8,7 +8,7 @@ const ROWS         = 3;
 const JPEG_QUALITY = 0.95;
 const PREVIEW_SIZE = 400;
 
-const BG_LIB_URL = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm';
+const BG_LIB_URL = 'https://esm.sh/@imgly/background-removal@1.4.5';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let uploadedImage = null;
@@ -101,7 +101,7 @@ async function handleFile(file) {
         const noBgBlob = await removeBackground(file, {
             model: 'small',
             output: { format: 'image/png', quality: 1 },
-            publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
+            publicPath: 'https://esm.sh/@imgly/background-removal@1.4.5/dist/',
             progress: (key, cur, total) => {
                 if (total > 0) {
                     const pct = Math.round(10 + (cur / total) * 75);
